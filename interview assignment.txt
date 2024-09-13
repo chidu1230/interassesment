@@ -1,0 +1,73 @@
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.Map;
+import java.util.Set;
+
+public class RecentlyPlayedSongsStore {
+    private final int capacity;
+    private final Map<String, LinkedHashSet<String>> userSongsMap;
+
+    public RecentlyPlayedSongsStore(int capacity) {
+        this.capacity = capacity;
+        this.userSongsMap = new LinkedHashMap<>();
+    }
+
+    public void playSong(String user, String song) {
+        LinkedHashSet<String> songs = userSongsMap.get(user);
+
+        if (songs == null) {
+            songs = new LinkedHashSet<>(capacity);
+            userSongsMap.put(user, songs);
+        }
+
+        if (songs.contains(song)) {
+            // Remove the song to update its position
+            songs.remove(song);
+        }
+
+        if (songs.size() == capacity) {
+            // Remove the least recently played song (first one in the set)
+            String oldestSong = songs.iterator().next();
+            songs.remove(oldestSong);
+        }
+
+        // Add the new song to the end (most recently played)
+        songs.add(song);
+    }
+
+    public Set<String> getRecentlyPlayedSongs(String user) {
+        return userSongsMap.getOrDefault(user, new LinkedHashSet<>());
+    }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        for (Map.Entry<String, LinkedHashSet<String>> entry : userSongsMap.entrySet()) {
+            sb.append("User: ").append(entry.getKey()).append(" -> Songs: ")
+              .append(String.join(",", entry.getValue())).append("\n");
+        }
+        return sb.toString();
+    }
+
+    public static void main(String[] args) {
+        RecentlyPlayedSongsStore store = new RecentlyPlayedSongsStore(3);
+
+        // Simulate song plays for different users
+        store.playSong("user1", "S1");
+        store.playSong("user1", "S2");
+        store.playSong("user1", "S3");
+        System.out.println("User1 Playlist:\n" + store.getRecentlyPlayedSongs("user1"));  // Output: [S1, S2, S3]
+
+        store.playSong("user1", "S4");
+        System.out.println("User1 Playlist:\n" + store.getRecentlyPlayedSongs("user1"));  // Output: [S2, S3, S4]
+
+        store.playSong("user1", "S2");
+        System.out.println("User1 Playlist:\n" + store.getRecentlyPlayedSongs("user1"));  // Output: [S3, S4, S2]
+
+        store.playSong("user1", "S1");
+        System.out.println("User1 Playlist:\n" + store.getRecentlyPlayedSongs("user1"));  // Output: [S4, S2, S1]
+
+        // Print the entire store state
+        System.out.println(store);
+    }
+}
